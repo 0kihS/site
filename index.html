@@ -1,281 +1,287 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; img-src 'self' data:;">
-    <title>thewired.eu.org</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400&family=Special+Elite&display=swap" rel="stylesheet">
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background-color: #1a1a1a; 
-            color: #e0e0e0;
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
-        #info {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: rgba(200, 200, 200, 0.7);
-            font-size: 12px;
-            font-family: 'Special Elite', cursive;
-            pointer-events: none;
-            max-width: 300px;
-            line-height: 1.6;
-        }
-        #title-text {
-            position: absolute;
-            bottom: 30px;
-            right: 40px;
-            font-family: 'Special Elite', cursive;
-            font-size: 28px;
-            color: rgba(220, 200, 220, 0.6); 
-            letter-spacing: 2px;
-            pointer-events: none;
-            text-shadow: 0 0 5px rgba(220, 200, 220, 0.3);
-        }
-    </style>
-</head>
-<body>
-    <div id="info">
-        <p id="text-snippet-1" style="opacity: 0;">Remember?</p>
-        <p id="text-snippet-2" style="opacity: 0;">do you see me</p>
-        <p id="text-snippet-3" style="opacity: 0;">hi :3</p>
-        <p id="text-snippet-4" style="opacity: 0;">am i here? are you the real you</p>
-    </div>
-    <div id="title-text">JUST FOR NOW</div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script>
-        let scene, camera, renderer;
-        let particles, particleMaterial;
-        let mouseX = 0, mouseY = 0;
-        let windowHalfX = window.innerWidth / 2;
-        let windowHalfY = window.innerHeight / 2;
-
-        const vertexShader = `
-            attribute float size;
-            attribute vec3 customColor;
-            varying vec3 vColor;
-            void main() {
-                vColor = customColor;
-                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-                gl_PointSize = size * (300.0 / -mvPosition.z); // Size attenuation
-                gl_Position = projectionMatrix * mvPosition;
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+            http-equiv="Content-Security-Policy"
+            content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; img-src 'self' data:;"
+        />
+        <title>thewired.eu.org</title>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400&family=Special+Elite&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            body {
+                margin: 0;
+                overflow: hidden;
+                background-color: #1a1a1a;
+                color: #e0e0e0;
+                font-family: "Inter", sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
             }
-        `;
-
-        const fragmentShader = `
-            varying vec3 vColor;
-            uniform sampler2D pointTexture;
-            void main() {
-                // Use a texture for a softer, more complex particle shape
-                gl_FragColor = vec4(vColor, 1.0);
-                gl_FragColor = gl_FragColor * texture2D(pointTexture, gl_PointCoord);
-                // Add a bit of noise / grain
-                float grain = (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) * 0.1;
-                gl_FragColor.rgb += grain;
-                gl_FragColor.a *= 0.7; // Make particles somewhat transparent
+            canvas {
+                display: block;
+                width: 100%;
+                height: 100%;
             }
-        `;
-        
-        function generateParticleTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 128;
-            canvas.height = 128;
-            const context = canvas.getContext('2d');
-            const gradient = context.createRadialGradient(
-                canvas.width / 2, canvas.height / 2, 0,
-                canvas.width / 2, canvas.height / 2, canvas.width / 2
-            );
-            gradient.addColorStop(0, 'rgba(255,255,255,1)');
-            gradient.addColorStop(0.2, 'rgba(255,255,255,0.8)');
-            gradient.addColorStop(0.4, 'rgba(200,200,220,0.5)');
-            gradient.addColorStop(1, 'rgba(0,0,0,0)');
-            context.fillStyle = gradient;
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            return new THREE.CanvasTexture(canvas);
-        }
+            #info {
+                position: absolute;
+                top: 20px;
+                left: 20px;
+                color: rgba(200, 200, 200, 0.7);
+                font-size: 12px;
+                font-family: "Special Elite", cursive;
+                pointer-events: none;
+                max-width: 300px;
+                line-height: 1.6;
+            }
+            #title-text {
+                position: absolute;
+                bottom: 30px;
+                right: 40px;
+                font-family: "Special Elite", cursive;
+                font-size: 28px;
+                color: rgba(220, 200, 220, 0.6);
+                letter-spacing: 2px;
+                pointer-events: none;
+                text-shadow: 0 0 5px rgba(220, 200, 220, 0.3);
+            }
+        </style>
+    </head>
+    <body>
+        <div id="info">
+            <p id="text-snippet-1" style="opacity: 0">Remember?</p>
+            <p id="text-snippet-2" style="opacity: 0">do you see me</p>
+            <p id="text-snippet-3" style="opacity: 0">hi :3</p>
+            <p id="text-snippet-4" style="opacity: 0">are you the real you</p>
+        </div>
+        <div id="title-text">JUST FOR NOW</div>
 
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+        <script>
+            let scene, camera, renderer;
+            let particles, particleMaterial;
+            let mouseX = 0, mouseY = 0;
+            let windowHalfX = window.innerWidth / 2;
+            let windowHalfY = window.innerHeight / 2;
 
-        function init() {
-            scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x1a1a1a, 0.0015);
+            const vertexShader = `
+                attribute float size;
+                attribute vec3 customColor;
+                varying vec3 vColor;
+                void main() {
+                    vColor = customColor;
+                    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                    gl_PointSize = size * (300.0 / -mvPosition.z); // Size attenuation
+                    gl_Position = projectionMatrix * mvPosition;
+                }
+            `;
 
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 3000);
-            camera.position.z = 800;
+            const fragmentShader = `
+                varying vec3 vColor;
+                uniform sampler2D pointTexture;
+                void main() {
+                    // Use a texture for a softer, more complex particle shape
+                    gl_FragColor = vec4(vColor, 1.0);
+                    gl_FragColor = gl_FragColor * texture2D(pointTexture, gl_PointCoord);
+                    // Add a bit of noise / grain
+                    float grain = (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) * 0.1;
+                    gl_FragColor.rgb += grain;
+                    gl_FragColor.a *= 0.7; // Make particles somewhat transparent
+                }
+            `;
 
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
-
-            const particleCount = 20000;
-            const positions = new Float32Array(particleCount * 3);
-            const colors = new Float32Array(particleCount * 3);
-            const sizes = new Float32Array(particleCount);
-
-            const color = new THREE.Color();
-
-            for (let i = 0; i < particleCount; i++) {
-                positions[i * 3] = (Math.random() * 2 - 1) * 1000; // x
-                positions[i * 3 + 1] = (Math.random() * 2 - 1) * 1000; // y
-                positions[i * 3 + 2] = (Math.random() * 2 - 1) * 1000; // z
-
-                const baseGrey = 0.5 + Math.random() * 0.3;
-                color.setHSL(
-                    Math.random() * 0.1 + 0.8,
-                    Math.random() * 0.3,
-                    baseGrey
+            function generateParticleTexture() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 128;
+                canvas.height = 128;
+                const context = canvas.getContext('2d');
+                const gradient = context.createRadialGradient(
+                    canvas.width / 2, canvas.height / 2, 0,
+                    canvas.width / 2, canvas.height / 2, canvas.width / 2
                 );
-                colors[i * 3] = color.r;
-                colors[i * 3 + 1] = color.g;
-                colors[i * 3 + 2] = color.b;
-
-                sizes[i] = Math.random() * 10 + 5;
+                gradient.addColorStop(0, 'rgba(255,255,255,1)');
+                gradient.addColorStop(0.2, 'rgba(255,255,255,0.8)');
+                gradient.addColorStop(0.4, 'rgba(200,200,220,0.5)');
+                gradient.addColorStop(1, 'rgba(0,0,0,0)');
+                context.fillStyle = gradient;
+                context.fillRect(0, 0, canvas.width, canvas.height);
+                return new THREE.CanvasTexture(canvas);
             }
 
-            const geometry = new THREE.BufferGeometry();
-            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            geometry.setAttribute('customColor', new THREE.BufferAttribute(colors, 3));
-            geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
 
-            particleMaterial = new THREE.ShaderMaterial({
-                uniforms: {
-                    pointTexture: { value: generateParticleTexture() }
-                },
-                vertexShader: vertexShader,
-                fragmentShader: fragmentShader,
-                blending: THREE.AdditiveBlending,
-                depthTest: false,
-                transparent: true
-            });
+            function init() {
+                scene = new THREE.Scene();
+                scene.fog = new THREE.FogExp2(0x1a1a1a, 0.0015);
 
-            particles = new THREE.Points(geometry, particleMaterial);
-            scene.add(particles);
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 3000);
+                camera.position.z = 800;
 
-            document.addEventListener('mousemove', onDocumentMouseMove, false);
-            document.addEventListener('touchstart', onDocumentTouchStart, false);
-            document.addEventListener('touchmove', onDocumentTouchMove, false);
-            window.addEventListener('resize', onWindowResize, false);
+                renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                document.body.appendChild(renderer.domElement);
 
-            animateTextSnippets();
-        }
+                const particleCount = 20000;
+                const positions = new Float32Array(particleCount * 3);
+                const colors = new Float32Array(particleCount * 3);
+                const sizes = new Float32Array(particleCount);
 
-        function onWindowResize() {
-            windowHalfX = window.innerWidth / 2;
-            windowHalfY = window.innerHeight / 2;
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
+                const color = new THREE.Color();
 
-        function onDocumentMouseMove(event) {
-            mouseX = event.clientX - windowHalfX;
-            mouseY = event.clientY - windowHalfY;
-        }
-        
-        function onDocumentTouchStart(event) {
-            if (event.touches.length === 1) {
-                event.preventDefault(); 
-                mouseX = event.touches[0].pageX - windowHalfX;
-                mouseY = event.touches[0].pageY - windowHalfY;
-            }
-        }
+                for (let i = 0; i < particleCount; i++) {
+                    positions[i * 3] = (Math.random() * 2 - 1) * 1000; // x
+                    positions[i * 3 + 1] = (Math.random() * 2 - 1) * 1000; // y
+                    positions[i * 3 + 2] = (Math.random() * 2 - 1) * 1000; // z
 
-        function onDocumentTouchMove(event) {
-            if (event.touches.length === 1) {
-                event.preventDefault();
-                mouseX = event.touches[0].pageX - windowHalfX;
-                mouseY = event.touches[0].pageY - windowHalfY;
-            }
-        }
+                    const baseGrey = 0.5 + Math.random() * 0.3;
+                    color.setHSL(
+                        Math.random() * 0.1 + 0.8,
+                        Math.random() * 0.3,
+                        baseGrey
+                    );
+                    colors[i * 3] = color.r;
+                    colors[i * 3 + 1] = color.g;
+                    colors[i * 3 + 2] = color.b;
 
-        const textElements = [
-            document.getElementById('text-snippet-1'),
-            document.getElementById('text-snippet-2'),
-            document.getElementById('text-snippet-3'),
-            document.getElementById('text-snippet-4'),
-        ];
-        let currentTextIndex = 0;
-        let textFadeTimeout;
-
-        function animateTextSnippets() {
-            textElements.forEach(el => el.style.opacity = 0);
-
-            if (textElements[currentTextIndex]) {
-                textElements[currentTextIndex].style.opacity = 0.7;
-            }
-            
-            currentTextIndex = (currentTextIndex + 1) % textElements.length;
-          
-            const randomInterval = Math.random() * 5000 + 5000;
-            clearTimeout(textFadeTimeout); /
-            textFadeTimeout = setTimeout(animateTextSnippets, randomInterval);
-        }
-
-
-        function animate() {
-            requestAnimationFrame(animate);
-            render();
-        }
-
-        let time = 0;
-        function render() {
-            time += 0.005;
-
-            camera.position.x += (mouseX * 0.5 - camera.position.x) * 0.02;
-            camera.position.y += (-mouseY * 0.5 - camera.position.y) * 0.02;
-            camera.lookAt(scene.position);
-
-            const positions = particles.geometry.attributes.position.array;
-            const initialPositions = particles.geometry.attributes.position.array.slice(); 
-
-            for (let i = 0; i < positions.length / 3; i++) {
-                const ix = i * 3;
-                const iy = i * 3 + 1;
-                const iz = i * 3 + 2;
-
-                positions[ix] += Math.sin(time + initialPositions[iz] * 0.01) * 0.5;
-                positions[iy] += Math.cos(time + initialPositions[ix] * 0.01) * 0.5;
-                positions[iz] += Math.sin(time + initialPositions[iy] * 0.01) * 0.3;
-              
-                const dx = positions[ix] - (mouseX * 1.5); 
-                const dy = positions[iy] - (-mouseY * 1.5);
-                const dz = positions[iz];
-                const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
-                
-                const forceFactor = 50 / Math.max(distance, 50);
-
-                if (distance < 300) { 
-                    positions[ix] -= dx * forceFactor * 0.01;
-                    positions[iy] -= dy * forceFactor * 0.01;
+                    sizes[i] = Math.random() * 10 + 5;
                 }
 
-                if (positions[ix] > 1200 || positions[ix] < -1200) positions[ix] *= -0.95;
-                if (positions[iy] > 1200 || positions[iy] < -1200) positions[iy] *= -0.95;
-                if (positions[iz] > 1200 || positions[iz] < -1200) positions[iz] *= -0.95;
+                const geometry = new THREE.BufferGeometry();
+                geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                geometry.setAttribute('customColor', new THREE.BufferAttribute(colors, 3));
+                geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+                particleMaterial = new THREE.ShaderMaterial({
+                    uniforms: {
+                        pointTexture: { value: generateParticleTexture() }
+                    },
+                    vertexShader: vertexShader,
+                    fragmentShader: fragmentShader,
+                    blending: THREE.AdditiveBlending,
+                    depthTest: false,
+                    transparent: true
+                });
+
+                particles = new THREE.Points(geometry, particleMaterial);
+                scene.add(particles);
+
+                document.addEventListener('mousemove', onDocumentMouseMove, false);
+                document.addEventListener('touchstart', onDocumentTouchStart, false);
+                document.addEventListener('touchmove', onDocumentTouchMove, false);
+                window.addEventListener('resize', onWindowResize, false);
+
+                animateTextSnippets();
             }
-            particles.geometry.attributes.position.needsUpdate = true;
-            
-            particles.rotation.y += 0.0002;
-            particles.rotation.x += 0.0001;
 
-            renderer.render(scene, camera);
-        }
+            function onWindowResize() {
+                windowHalfX = window.innerWidth / 2;
+                windowHalfY = window.innerHeight / 2;
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
 
-        init();
-        animate();
-    </script>
-</body>
+            function onDocumentMouseMove(event) {
+                mouseX = event.clientX - windowHalfX;
+                mouseY = event.clientY - windowHalfY;
+            }
+
+            function onDocumentTouchStart(event) {
+                if (event.touches.length === 1) {
+                    event.preventDefault();
+                    mouseX = event.touches[0].pageX - windowHalfX;
+                    mouseY = event.touches[0].pageY - windowHalfY;
+                }
+            }
+
+            function onDocumentTouchMove(event) {
+                if (event.touches.length === 1) {
+                    event.preventDefault();
+                    mouseX = event.touches[0].pageX - windowHalfX;
+                    mouseY = event.touches[0].pageY - windowHalfY;
+                }
+            }
+
+            const textElements = [
+                document.getElementById('text-snippet-1'),
+                document.getElementById('text-snippet-2'),
+                document.getElementById('text-snippet-3'),
+                document.getElementById('text-snippet-4'),
+            ];
+            let currentTextIndex = 0;
+            let textFadeTimeout;
+
+            function animateTextSnippets() {
+                textElements.forEach(el => el.style.opacity = 0);
+
+                if (textElements[currentTextIndex]) {
+                    textElements[currentTextIndex].style.opacity = 0.7;
+                }
+
+                currentTextIndex = (currentTextIndex + 1) % textElements.length;
+
+                const randomInterval = Math.random() * 5000 + 5000;
+                clearTimeout(textFadeTimeout); /
+                textFadeTimeout = setTimeout(animateTextSnippets, randomInterval);
+            }
+
+
+            function animate() {
+                requestAnimationFrame(animate);
+                render();
+            }
+
+            let time = 0;
+            function render() {
+                time += 0.005;
+
+                camera.position.x += (mouseX * 0.5 - camera.position.x) * 0.02;
+                camera.position.y += (-mouseY * 0.5 - camera.position.y) * 0.02;
+                camera.lookAt(scene.position);
+
+                const positions = particles.geometry.attributes.position.array;
+                const initialPositions = particles.geometry.attributes.position.array.slice();
+
+                for (let i = 0; i < positions.length / 3; i++) {
+                    const ix = i * 3;
+                    const iy = i * 3 + 1;
+                    const iz = i * 3 + 2;
+
+                    positions[ix] += Math.sin(time + initialPositions[iz] * 0.01) * 0.5;
+                    positions[iy] += Math.cos(time + initialPositions[ix] * 0.01) * 0.5;
+                    positions[iz] += Math.sin(time + initialPositions[iy] * 0.01) * 0.3;
+
+                    const dx = positions[ix] - (mouseX * 1.5);
+                    const dy = positions[iy] - (-mouseY * 1.5);
+                    const dz = positions[iz];
+                    const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+                    const forceFactor = 50 / Math.max(distance, 50);
+
+                    if (distance < 300) {
+                        positions[ix] -= dx * forceFactor * 0.01;
+                        positions[iy] -= dy * forceFactor * 0.01;
+                    }
+
+                    if (positions[ix] > 1200 || positions[ix] < -1200) positions[ix] *= -0.95;
+                    if (positions[iy] > 1200 || positions[iy] < -1200) positions[iy] *= -0.95;
+                    if (positions[iz] > 1200 || positions[iz] < -1200) positions[iz] *= -0.95;
+                }
+                particles.geometry.attributes.position.needsUpdate = true;
+
+                particles.rotation.y += 0.0002;
+                particles.rotation.x += 0.0001;
+
+                renderer.render(scene, camera);
+            }
+
+            init();
+            animate();
+        </script>
+    </body>
 </html>
