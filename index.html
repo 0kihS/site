@@ -1,779 +1,364 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; img-src 'self' data:;" />
-    <title>thewired.eu.org</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js Inside Sphere</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400&family=Special+Elite&display=swap"
         rel="stylesheet" />
     <style>
-                body {
+        body {
             margin: 0;
             overflow: hidden;
-            background-color: #1a1a1a;
-            color: #e0e0e0;
-            font-family: "Inter", sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            background-color: #111;
+            color: white;
         }
-
         canvas {
             display: block;
-            width: 100%;
-            height: 100%;
-        }
-
-        #info {
-            position: absolute;
-            pointer-events: none;
-        }
-
-        #title-text {
-            position: absolute;
-            bottom: 30px;
-            right: 40px;
-            font-family: "Special Elite", cursive;
-            font-size: 28px;
-            color: rgba(220, 200, 220, 0.6);
-            letter-spacing: 2px;
-            pointer-events: none;
-            text-shadow: 0 0 5px rgba(220, 200, 220, 0.3);
-        }
-
-        /* Snippets share base style */
-        #info p {
-            font-family: "Special Elite", cursive;
-            font-size: 14px;
-            color: rgba(220, 200, 220, 0.7);
-            letter-spacing: 1px;
-            margin: 0;
-            white-space: nowrap;
-            transition: opacity 1s ease;
-        }
-
-        /* New styles for interactive elements */
-        #personal-info {
-            position: absolute;
-            bottom: 30px;
-            left: 40px;
-            font-family: "Special Elite", cursive;
-            font-size: 14px;
-            color: rgba(220, 200, 220, 0.0);
-            letter-spacing: 1px;
-            max-width: 300px;
-            transition: color 2s ease;
-            line-height: 1.6;
-        }
-
-        .personal-info-visible {
-            color: rgba(220, 200, 220, 0.6) !important;
-        }
-
-        #zone-1 {
-            top: 30%;
-            left: 20%;
-        }
-
-        #zone-2 {
-            top: 60%;
-            left: 70%;
-        }
-
-        #zone-3 {
-            top: 20%;
-            right: 15%;
-        }
-
-        .key-guide {
-            position: absolute;
-            top: 20px;
-            right: 40px;
-            font-family: "Inter", sans-serif;
-            font-size: 12px;
-            color: rgba(200, 200, 200, 0.3);
-            letter-spacing: 1px;
-            text-align: right;
-            opacity: 0;
-            transition: opacity 1s ease;
-        }
-
-        body:hover .key-guide {
-            opacity: 0.3;
-        }
-
-        #secret-counter {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-family: "Inter", sans-serif;
-            font-size: 10px;
-            color: rgba(200, 200, 200, 0.2);
-            display: none;
         }
 
         #about-toggle {
-
             position: absolute;
-
             bottom: 30px;
-
             left: 40px;
-
             font-family: "Special Elite", cursive;
-
             font-size: 16px;
-
-            color: rgba(200, 200, 200, 0.5);
-
+            color: rgba(33, 23, 23, 0.5);
             letter-spacing: 1px;
-
             cursor: pointer;
-
             z-index: 10;
-
             transition: color 0.3s ease;
-
         }
 
         #about-toggle:hover {
-
             color: rgba(220, 200, 220, 0.8);
-
         }
 
         #about-panel {
-
             position: absolute;
-
             left: -400px;
-
             top: 0;
-
             width: 360px;
-
             height: 100%;
-
             background: rgba(15, 15, 15, 0.85);
-
             backdrop-filter: blur(10px);
-
             transition: left 0.5s cubic-bezier(0.19, 1, 0.22, 1);
-
             z-index: 5;
-
             padding: 80px 20px 40px;
-
             overflow-y: auto;
-
             box-sizing: border-box;
-
         }
 
         #about-panel.visible {
-
             left: 0;
-
         }
 
         #about-panel h2 {
-
             font-family: "Special Elite", cursive;
-
             color: rgba(220, 200, 220, 0.8);
-
             margin-bottom: 20px;
-
             letter-spacing: 1px;
-
             font-size: 18px;
-
         }
 
         #about-panel p {
-
             font-family: "Inter", sans-serif;
-
             font-size: 14px;
-
             line-height: 1.6;
-
             color: rgba(200, 200, 200, 0.7);
-
             margin-bottom: 20px;
-
         }
 
         #about-panel .section {
-
             margin-bottom: 30px;
-
         }
 
         #close-about {
-
             position: absolute;
-
             top: 20px;
-
             right: 20px;
-
             font-size: 20px;
-
             color: rgba(200, 200, 200, 0.7);
-
             cursor: pointer;
-
             transition: color 0.3s ease;
-
         }
 
         #close-about:hover {
-
             color: rgba(220, 200, 220, 0.9);
-
         }
 
         .social-links {
-
             display: flex;
-
             gap: 15px;
-
             margin-top: 10px;
-
         }
 
         .social-links a {
-
             color: rgba(200, 200, 200, 0.6);
-
             font-size: 14px;
-
             text-decoration: none;
-
             transition: color 0.3s ease;
-
         }
 
         .social-links a:hover {
-
             color: rgba(220, 200, 220, 0.9);
-
         }
 
-        .thought {
-
-            font-style: italic;
-
-            border-left: 1px solid rgba(220, 200, 220, 0.3);
-
-            padding-left: 10px;
-
-            margin: 15px 0;
-
-        }
-
-        #interaction-hint {
-
+        #loading {
             position: absolute;
-
-            bottom: 70px;
-
-            right: 40px;
-
-            font-size: 12px;
-
-            color: rgba(200, 200, 200, 0.4);
-
-            pointer-events: none;
-
-            opacity: 0;
-
-            transition: opacity 1s ease;
-
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(200, 200, 200, 0.7);
+            font-size: 18px;
+            z-index: 20;
         }
     </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
 </head>
-
 <body>
-    <div id="info">
-        <p id="text-snippet-1" style="opacity: 0">do you see me</p>
-        <p id="text-snippet-2" style="opacity: 0">hi :3</p>
-        <p id="text-snippet-3" style="opacity: 0">try typing your favourite number~</p>
-        <p id="text-snippet-4" style="opacity: 0">hold space to see O-O</p>
-    </div>
-    <div id="title-text">JUST FOR NOW</div>
-
-    <div id="interaction-hint">move your cursor to interact...</div>
-
+    <div id="loading">Loading...</div>
     <div id="about-toggle">about</div>
-
     <div id="about-panel">
-
         <div id="close-about">×</div>
-
         <div class="section">
-
             <h2>who am i</h2>
-
             <p> i'm just me </p>
             <p> welcome to my site :D </p>
-
             <div class="thought">enjoy your stay~</div>
-
             <p>it's not much, but this little corner of the web is mine :)</p>
-
         </div>
-
         <div class="section">
-
             <h2>current interests</h2>
-
             <p>- interpretablity</p>
-            <p>- </p>
-
+            <p>- visualizations</p>
+            <p>- music production</p>
         </div>
-
         <div class="section">
-
             <h2>elsewhere</h2>
-
             <div class="social-links">
-
                 <a href="https://github.com/0kihS" id="github-link">github</a>
-
                 <a href="https://discord.com/users/718085024695582723" id="discord-profile">discord</a>
-
                 <a href="https://discord.gg/invite/44wUeXN" id="exu-link">EXU</a>
-
                 <a href="#" id="blog-link">writing</a>
-
             </div>
-
         </div>
-
         <div class="section">
-
             <h2>projects</h2>
-
             <p id="projects-content">coming soon... :D</p>
-
         </div>
-
         <div class="section">
-
-            <h2>transmission</h2>
-
-            <p id="message-content">.-/--/---/-./--./......./..-/.../......
-                 ../-./......./.-././.-./-../......./.-../../..-./.</p>
         </div>
-
-    </div>
-
-    <div class="key-guide">
-        [1-5]
-        [space]
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script>
-        let scene, camera, renderer;
-        let particles, particleMaterial;
-        let mouseX = 0, mouseY = 0;
-        let windowHalfX = window.innerWidth / 2;
-        let windowHalfY = window.innerHeight / 2;
-        let currentMood = 0;
-        let secretsFound = 0;
-        let titleTexts = [
-            "JUST FOR NOW",
-            "BETWEEN WORLDS",
-            "DIGITAL ECHO",
-            "SIGNAL FLOW",
-            "MEMORY PALACE"
-        ];
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
 
-        const keyState = {
-            space: false
+    <script>
+    let scene, camera, renderer, sphere, model;
+    let targetRotationX = 0;
+    let baseRotationY = 0;
+    let targetRotationYOffset = 0;
+    let clock;
+    const autoRotationSpeed = 0.03;
+
+    function init() {
+        scene = new THREE.Scene();
+
+        camera = new THREE.PerspectiveCamera(
+            75,
+            window.innerWidth / window.innerHeight,
+            0.1,
+            100
+        );
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        setupAboutPanel();
+
+        const textureLoader = new THREE.TextureLoader();
+        const sphereTextureUrl = 'ball.png';
+        const modelTextureUrl = 'Text2.png';
+        const placeholderUrl = 'https://placehold.co/512x512/ffffff/000000.png?text=texture%0Anot%20found';
+
+        const loadTextureWithFallback = (url, fallbackUrl) => {
+            return new Promise((resolve) => {
+                textureLoader.load(
+                    url,
+                    (texture) => {
+                        resolve(texture);
+                    },
+                    undefined,
+                    (err) => {
+                        textureLoader.load(
+                            fallbackUrl,
+                            (fallbackTexture) => {
+                                resolve(fallbackTexture);
+                            },
+                            undefined,
+                            (fallbackErr) => {
+                                resolve(null);
+                            }
+                        );
+                    }
+                );
+            });
         };
 
-        const vertexShader = `
-                attribute float size;
-                attribute vec3 customColor;
-                varying vec3 vColor;
-                void main() {
-                    vColor = customColor;
-                    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-                    gl_PointSize = size * (300.0 / -mvPosition.z); // Size attenuation
-                    gl_Position = projectionMatrix * mvPosition;
-                }
-            `;
-
-        const fragmentShader = `
-                varying vec3 vColor;
-                uniform sampler2D pointTexture;
-                void main() {
-                    // Use a texture for a softer, more complex particle shape
-                    gl_FragColor = vec4(vColor, 1.0);
-                    gl_FragColor = gl_FragColor * texture2D(pointTexture, gl_PointCoord);
-                    // Add a bit of noise / grain
-                    float grain = (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) * 0.1;
-                    gl_FragColor.rgb += grain;
-                    gl_FragColor.a *= 0.7; // Make particles somewhat transparent
-                }
-            `;
-
-        function generateParticleTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 128;
-            canvas.height = 128;
-            const context = canvas.getContext('2d');
-            const gradient = context.createRadialGradient(
-                canvas.width / 2, canvas.height / 2, 0,
-                canvas.width / 2, canvas.height / 2, canvas.width / 2
-            );
-            gradient.addColorStop(0, 'rgba(255,255,255,1)');
-            gradient.addColorStop(0.2, 'rgba(255,255,255,0.8)');
-            gradient.addColorStop(0.4, 'rgba(200,200,220,0.5)');
-            gradient.addColorStop(1, 'rgba(0,0,0,0)');
-            context.fillStyle = gradient;
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            return new THREE.CanvasTexture(canvas);
-        }
-
-
-        function init() {
-            scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x1a1a1a, 0.0015);
-
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 3000);
-            camera.position.z = 800;
-
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
-
-            createParticles();
-
-            document.addEventListener('mousemove', onDocumentMouseMove, false);
-            document.addEventListener('touchstart', onDocumentTouchStart, false);
-            document.addEventListener('touchmove', onDocumentTouchMove, false);
-            document.addEventListener('keydown', onKeyDown, false);
-            document.addEventListener('keyup', onKeyUp, false);
-            window.addEventListener('resize', onWindowResize, false);
-
-            window.addEventListener('resize', onWindowResize, false);
-
-
-
-            animateTextSnippets();
-
-            setupAboutPanel();
-
-            setTimeout(() => {
-
-                document.getElementById('interaction-hint').style.opacity = 1;
-
-                setTimeout(() => {
-
-                    document.getElementById('interaction-hint').style.opacity = 0;
-
-                }, 5000);
-
-            }, 3000);
-
-            const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-
-        }
-
-        function setupAboutPanel() {
-
-            const aboutToggle = document.getElementById('about-toggle');
-
-            const aboutPanel = document.getElementById('about-panel');
-
-            const closeAbout = document.getElementById('close-about');
-
-            aboutToggle.addEventListener('click', () => {
-
-                aboutPanel.classList.add('visible');
-
+        Promise.all([
+            loadTextureWithFallback(sphereTextureUrl, placeholderUrl),
+            loadTextureWithFallback(modelTextureUrl, placeholderUrl),
+        ]).then(([sphereTexture, modelTexture]) => {
+            // Create the sphere
+            const geometry = new THREE.SphereGeometry(5, 64, 64);
+            const material = new THREE.MeshBasicMaterial({
+                map: sphereTexture,
+                side: THREE.BackSide
             });
+            sphere = new THREE.Mesh(geometry, material);
+            scene.add(sphere);
 
-            closeAbout.addEventListener('click', () => {
+            // Load the OBJ model
+            const objLoader = new THREE.OBJLoader();
+            objLoader.load('Model.obj', function(object) {
+            object.traverse(function(child) {
+                object.traverse(function(child) {
+    if (child instanceof THREE.Mesh) {
+        child.material.map = modelTexture;
+        child.material.needsUpdate = true;
+    }
+});
+            });
+            
+            const box = new THREE.Box3().setFromObject(object);
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+            
+            object.position.x = -center.x;
+            object.position.y = -center.y;
+            object.position.z = -center.z;
+            
+            const maxDim = Math.max(size.x / 4, size.y / 4, size.z / 4);
+            //const fov = camera.fov * (Math.PI / 180);
+            //let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+            //cameraZ *= 1.5;
+            //camera.position.z = cameraZ;
+            
+            model = object;
+            scene.add(object);
+            document.getElementById('loading').style.display = 'none';
+        });
 
+            // Lighting
+            const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+            pointLight.position.set(0, 0, 0);
+            scene.add(pointLight);
+
+            const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
+            scene.add(ambientLight);
+
+            // Add directional lights for better model visibility
+            /*const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight1.position.set(1, 1, 1);
+            scene.add(dirLight1);
+
+            const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.5);
+            dirLight2.position.set(-1, -1, -1);
+            scene.add(dirLight2);*/
+
+            window.addEventListener('resize', onWindowResize);
+            document.addEventListener('mousemove', onMouseMove);
+
+            clock = new THREE.Clock();
+            animate();
+        });
+    }
+
+    function setupAboutPanel() {
+        const aboutToggle = document.getElementById('about-toggle');
+        const aboutPanel = document.getElementById('about-panel');
+        const closeAbout = document.getElementById('close-about');
+
+        aboutToggle.addEventListener('click', () => {
+            aboutPanel.classList.add('visible');
+        });
+
+        closeAbout.addEventListener('click', () => {
+            aboutPanel.classList.remove('visible');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target !== aboutToggle &&
+                !aboutPanel.contains(e.target) &&
+                aboutPanel.classList.contains('visible')) {
                 aboutPanel.classList.remove('visible');
-
-            });
-
-            document.addEventListener('click', (e) => {
-
-                if (e.target !== aboutToggle &&
-
-                    !aboutPanel.contains(e.target) &&
-
-                    aboutPanel.classList.contains('visible')) {
-
-                    aboutPanel.classList.remove('visible');
-
-                }
-
-            });
-
-            const thoughts = [
-
-                "enjoy your stay~",
-
-                "please don't leave",
-
-                "see you again soon!",
-
-                "updated continuously :O"
-
-            ];
-
-            setInterval(() => {
-
-                const thoughtElements = document.querySelectorAll('.thought');
-
-                thoughtElements.forEach(el => {
-
-                    el.style.opacity = 0;
-
-                    setTimeout(() => {
-
-                        el.textContent = thoughts[Math.floor(Math.random() * thoughts.length)];
-
-                        el.style.opacity = 1;
-
-                    }, 500);
-
-                });
-
-            }, 20000);
-        }
-
-        function createParticles() {
-            const particleCount = 20000;
-            const positions = new Float32Array(particleCount * 3);
-            const colors = new Float32Array(particleCount * 3);
-            const sizes = new Float32Array(particleCount);
-
-            const color = new THREE.Color();
-
-            const palettes = [
-                { hue: 0.8, saturation: 0.3 },    // Default
-                { hue: 0.5, saturation: 0.4 },    // Teal/cyan
-                { hue: 0.1, saturation: 0.5 },    // Orange-gold
-                { hue: 0.3, saturation: 0.3 },    // Green
-                { hue: 0.95, saturation: 0.4 }    // Magenta
-            ];
-
-            const currentPalette = palettes[currentMood];
-
-            for (let i = 0; i < particleCount; i++) {
-                positions[i * 3] = (Math.random() * 2 - 1) * 1000; // x
-                positions[i * 3 + 1] = (Math.random() * 2 - 1) * 1000; // y
-                positions[i * 3 + 2] = (Math.random() * 2 - 1) * 1000; // z
-
-                const baseGrey = 0.5 + Math.random() * 0.3;
-                color.setHSL(
-                    Math.random() * 0.1 + currentPalette.hue,
-                    Math.random() * currentPalette.saturation,
-                    baseGrey
-                );
-                colors[i * 3] = color.r;
-                colors[i * 3 + 1] = color.g;
-                colors[i * 3 + 2] = color.b;
-
-                sizes[i] = Math.random() * 10 + 5;
             }
+        });
 
-            const geometry = new THREE.BufferGeometry();
-            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            geometry.setAttribute('customColor', new THREE.BufferAttribute(colors, 3));
-            geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-
-            particleMaterial = new THREE.ShaderMaterial({
-                uniforms: {
-                    pointTexture: { value: generateParticleTexture() }
-                },
-                vertexShader: vertexShader,
-                fragmentShader: fragmentShader,
-                blending: THREE.AdditiveBlending,
-                depthTest: false,
-                transparent: true
-            });
-
-            particles = new THREE.Points(geometry, particleMaterial);
-            scene.add(particles);
-        }
-
-        function onKeyDown(event) {
-            if (event.key >= '1' && event.key <= '5') {
-                changeMood(parseInt(event.key) - 1);
-            }
-
-
-            if (event.key === ' ') {
-                keyState.space = true;
-                pulseParticles();
-                event.preventDefault();
-            }
-        }
-
-        function onKeyUp(event) {
-            if (event.key === ' ') {
-                keyState.space = false;
-            }
-        }
-
-        function pulseParticles() {
-            const positions = particles.geometry.attributes.position.array;
-
-            for (let i = 0; i < positions.length / 3; i++) {
-                const ix = i * 3;
-                const iy = i * 3 + 1;
-                const iz = i * 3 + 2;
-
-                const distance = Math.sqrt(
-                    positions[ix] * positions[ix] +
-                    positions[iy] * positions[iy] +
-                    positions[iz] * positions[iz]
-                );
-
-                const forceFactor = 50 / Math.max(distance, 20);
-                positions[ix] *= 1 + forceFactor * 0.02;
-                positions[iy] *= 1 + forceFactor * 0.02;
-                positions[iz] *= 1 + forceFactor * 0.02;
-            }
-
-            particles.geometry.attributes.position.needsUpdate = true;
-        }
-
-        function changeMood(moodIndex) {
-            if (moodIndex === currentMood) return;
-
-            currentMood = moodIndex;
-
-            document.getElementById('title-text').textContent = titleTexts[currentMood];
-
-            scene.remove(particles);
-            createParticles();
-        }
-
-        function onWindowResize() {
-            windowHalfX = window.innerWidth / 2;
-            windowHalfY = window.innerHeight / 2;
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        function onDocumentMouseMove(event) {
-            mouseX = event.clientX - windowHalfX;
-            mouseY = event.clientY - windowHalfY;
-        }
-
-        function onDocumentTouchStart(event) {
-            if (event.touches.length === 1) {
-                event.preventDefault();
-                mouseX = event.touches[0].pageX - windowHalfX;
-                mouseY = event.touches[0].pageY - windowHalfY;
-            }
-        }
-
-        function onDocumentTouchMove(event) {
-            if (event.touches.length === 1) {
-                event.preventDefault();
-                mouseX = event.touches[0].pageX - windowHalfX;
-                mouseY = event.touches[0].pageY - windowHalfY;
-            }
-        }
-
-        const textElements = [
-            document.getElementById('text-snippet-1'),
-            document.getElementById('text-snippet-2'),
-            document.getElementById('text-snippet-3'),
-            document.getElementById('text-snippet-4'),
+        const thoughts = [
+            "enjoy your stay~",
+            "please don't leave",
+            "see you again soon!",
+            "updated continuously :O"
         ];
-        let currentTextIndex = 0;
-        let textFadeTimeout;
 
-        function animateTextSnippets() {
-            textElements.forEach(el => el.style.opacity = 0);
+        setInterval(() => {
+            const thoughtElements = document.querySelectorAll('.thought');
+            thoughtElements.forEach(el => {
+                el.style.opacity = 0;
+                setTimeout(() => {
+                    el.textContent = thoughts[Math.floor(Math.random() * thoughts.length)];
+                    el.style.opacity = 1;
+                }, 500);
+            });
+        }, 20000);
+    }
 
-            const el = textElements[currentTextIndex];
-            el.style.position = 'fixed';
-            el.style.top = (Math.random() * 80 + 10) + 'vh'; 
-            el.style.left = (Math.random() * 80 + 10) + 'vw'; 
-            el.style.opacity = 0.7;
+    function onMouseMove(event) {
+        const mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+        const mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
 
-            currentTextIndex = (currentTextIndex + 1) % textElements.length;
+        targetRotationX = mouseY * (Math.PI / 4) / 2;
+        targetRotationYOffset = mouseX * Math.PI / 4;
+    }
 
-            const randomInterval = Math.random() * 5000 + 5000;
-            clearTimeout(textFadeTimeout);
-            textFadeTimeout = setTimeout(animateTextSnippets, randomInterval);
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        if (sphere) {
+            const delta = clock.getDelta();
+            baseRotationY += autoRotationSpeed * delta;
+
+            const damping = 0.05;
+            sphere.rotation.x += (targetRotationX - sphere.rotation.x) * damping;
+
+            const desiredY = baseRotationY + targetRotationYOffset;
+            sphere.rotation.y += (desiredY - sphere.rotation.y) * damping;
         }
 
-
-        function animate() {
-            requestAnimationFrame(animate);
-            render();
+        // Rotate the model opposite to the sphere for visual effect
+        if (model) {
+            model.rotation.y = -baseRotationY * 0.2;
+            model.rotation.x = -sphere.rotation.x * 0.2;
+            model.rotation.z = -sphere.rotation.y * 0.2;
         }
 
-        let time = 0;
-        function render() {
-            time += 0.005;
+        renderer.render(scene, camera);
+    }
 
-            camera.position.x += (mouseX * 0.5 - camera.position.x) * 0.02;
-            camera.position.y += (-mouseY * 0.5 - camera.position.y) * 0.02;
-            camera.lookAt(scene.position);
-
-            const positions = particles.geometry.attributes.position.array;
-            const initialPositions = particles.geometry.attributes.position.array.slice();
-
-            for (let i = 0; i < positions.length / 3; i++) {
-                const ix = i * 3;
-                const iy = i * 3 + 1;
-                const iz = i * 3 + 2;
-
-                positions[ix] += Math.sin(time + initialPositions[iz] * 0.01) * 0.5;
-                positions[iy] += Math.cos(time + initialPositions[ix] * 0.01) * 0.5;
-                positions[iz] += Math.sin(time + initialPositions[iy] * 0.01) * 0.3;
-
-                const dx = positions[ix] - (mouseX * 1.5);
-                const dy = positions[iy] - (-mouseY * 1.5);
-                const dz = positions[iz];
-                const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
-
-                const forceFactor = 50 / Math.max(distance, 50);
-
-                if (distance < 300) {
-                    positions[ix] -= dx * forceFactor * 0.01;
-                    positions[iy] -= dy * forceFactor * 0.01;
-                }
-
-                if (positions[ix] > 1200 || positions[ix] < -1200) positions[ix] *= -0.95;
-                if (positions[iy] > 1200 || positions[iy] < -1200) positions[iy] *= -0.95;
-                if (positions[iz] > 1200 || positions[iz] < -1200) positions[iz] *= -0.95;
-            }
-            particles.geometry.attributes.position.needsUpdate = true;
-
-            const rotationSpeeds = [0.0002, 0.0003, 0.0001, 0.0004, 0.0002];
-            particles.rotation.y += rotationSpeeds[currentMood];
-            particles.rotation.x += rotationSpeeds[currentMood] / 2;
-
-            renderer.render(scene, camera);
-        }
-
-        init();
-        animate();
+    init();
     </script>
 </body>
-
 </html>
